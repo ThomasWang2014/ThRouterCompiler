@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/ThRouterCompiler.iml" filepath="$PROJECT_DIR$/ThRouterCompiler.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/throuter-annotation/throuter-annotation.iml" filepath="$PROJECT_DIR$/throuter-annotation/throuter-annotation.iml" />
+      <module fileurl="file://$PROJECT_DIR$/throuter-compiler/throuter-compiler.iml" filepath="$PROJECT_DIR$/throuter-compiler/throuter-compiler.iml" />
+    </modules>
+  </component>
+</project>
