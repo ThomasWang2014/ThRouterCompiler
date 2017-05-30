@@ -1,8 +1,12 @@
 package com.thfund.client.router.demo;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 
+import com.thfund.client.router.annotation.Route;
+
+@Route(key = "main", formerBundleID = "1001",
+        formerClassName = "com.thfund.client.router.demo.FormerActivity")
 public class MainActivity extends AppCompatActivity {
 
     @Override
