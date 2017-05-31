@@ -21,5 +21,5 @@ public enum TypeKind {
     // Other type
     STRING,
     PARCELABLE,
-    OBJECT;
+    OBJECT
 }

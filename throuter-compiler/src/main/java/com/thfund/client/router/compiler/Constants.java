@@ -20,6 +20,10 @@ public class Constants {
 
     // Log
     public static final String PREFIX_OF_LOGGER = PROJECT + "::Compiler ";
-    public static final String PARCELABLE = "android.os.Parcelable";
     public static final String ANNOTATION_TYPE_ROUTE= "com.thfund.client.router.annotation.Route";
+
+    // System interface
+    public static final String ACTIVITY = "android.app.Activity";
+    public static final String FRAGMENT = "android.app.Fragment";
+    public static final String PARCELABLE = "android.os.Parcelable";
 }

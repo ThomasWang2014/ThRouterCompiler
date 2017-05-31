@@ -10,9 +10,8 @@ import javax.tools.Diagnostic;
 /**
  * Simplify the messager.
  *
- * @author Alex <a href="mailto:zhilong.liu@aliyun.com">Contact me.</a>
- * @version 1.0
- * @since 16/8/22 上午11:48
+ * @author WayneWang
+ * @since 2017/5/26 10:56
  */
 public class Logger {
     private Messager msg;

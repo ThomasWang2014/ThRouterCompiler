@@ -20,9 +20,8 @@ import static com.thfund.client.router.compiler.Constants.STRING;
 /**
  * Utils for type exchange
  *
- * @author zhilong <a href="mailto:zhilong.lzl@alibaba-inc.com">Contact me.</a>
- * @version 1.0
- * @since 2017/2/21 下午1:06
+ * @author WayneWang
+ * @since 2017/5/26 10:56
  */
 public class TypeUtils {
 
