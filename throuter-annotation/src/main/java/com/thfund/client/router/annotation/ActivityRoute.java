@@ -6,18 +6,18 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * @author ThomasWang
+ * @author WayneWang
  * @since 2017/5/28 17:51
  */
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.CLASS)
-public @interface Route {
+public @interface ActivityRoute {
     String routeKey();
+
+    String bundleID();
 
     String formerBundleID() default "";
 
     String formerClassName() default "";
-
-    String routeParent() default "";
 }

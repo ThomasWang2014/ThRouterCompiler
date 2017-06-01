@@ -18,7 +18,7 @@ import static com.thfund.client.router.compiler.Constants.BOOLEAN;
 import static com.thfund.client.router.compiler.Constants.STRING;
 
 /**
- * Utils for type exchange
+ * CollectionUtils for type exchange
  *
  * @author WayneWang
  * @since 2017/5/26 10:56

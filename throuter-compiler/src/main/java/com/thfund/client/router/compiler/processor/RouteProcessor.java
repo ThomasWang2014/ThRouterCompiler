@@ -1,13 +1,22 @@
 package com.thfund.client.router.compiler.processor;
 
 import com.google.auto.service.AutoService;
-import com.thfund.client.router.annotation.Route;
+import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.JavaFile;
+import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.ParameterSpec;
+import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.TypeSpec;
+import com.thfund.client.router.annotation.ActivityRoute;
+import com.thfund.client.router.annotation.FragmentRoute;
 import com.thfund.client.router.compiler.Constants;
+import com.thfund.client.router.compiler.utils.CollectionUtils;
 import com.thfund.client.router.compiler.utils.Logger;
 import com.thfund.client.router.compiler.utils.TypeUtils;
+import com.thfund.client.router.model.RouteMeta;
 
-import org.apache.commons.collections4.CollectionUtils;
-
+import java.io.IOException;
+import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -20,8 +29,16 @@ import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+
+import static com.thfund.client.router.compiler.Constants.ACTIVITY;
+import static com.thfund.client.router.compiler.Constants.I_ACTIVITY_ROUTE;
+import static com.thfund.client.router.compiler.Constants.METHOD_LOAD_INTO;
+import static com.thfund.client.router.compiler.Constants.SEPARATOR;
+import static com.thfund.client.router.compiler.Constants.WARNING_TIPS;
+import static javax.lang.model.element.Modifier.PUBLIC;
 
 /**
  * @author WayneWang
@@ -29,7 +46,7 @@ import javax.lang.model.util.Types;
  */
 @AutoService(Processor.class)
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
-@SupportedAnnotationTypes(Constants.ANNOTATION_TYPE_ROUTE)
+@SupportedAnnotationTypes({Constants.ANNOTATION_TYPE_ACTIVITY_ROUTE, Constants.ANNOTATION_TYPE_FRAGMENT_ROUTE})
 public class RouteProcessor extends AbstractProcessor {
     private Filer mFiler;       // File util, write class file into disk.
     private Logger logger;
@@ -55,10 +72,12 @@ public class RouteProcessor extends AbstractProcessor {
             return false;
         }
 
-        Set<? extends Element> routeElements = roundEnvironment.getElementsAnnotatedWith(Route.class);
+        Set<? extends Element> activityRouteElements = roundEnvironment.getElementsAnnotatedWith(ActivityRoute.class);
+        Set<? extends Element> fragmentRouteElements = roundEnvironment.getElementsAnnotatedWith(FragmentRoute.class);
         try {
             logger.info(">>> Found routes, start... <<<");
-            this.parseRoutes(routeElements);
+            this.parseActivityRoutes(activityRouteElements);
+            this.parseFragmentRoutes(fragmentRouteElements);
 
         } catch (Exception e) {
             logger.error(e);
@@ -66,7 +85,86 @@ public class RouteProcessor extends AbstractProcessor {
         return true;
     }
 
-    private void parseRoutes(Set<? extends Element> elements) {
+    private void parseActivityRoutes(Set<? extends Element> routeElements) throws IOException {
+        TypeMirror type_Activity = elements.getTypeElement(ACTIVITY).asType();
 
+        // Interface of ThRouter
+        TypeElement type_IActivityRoute = elements.getTypeElement(I_ACTIVITY_ROUTE);
+        ClassName routeMetaCn = ClassName.get(RouteMeta.class);
+
+        /*
+            Build input type, format as :
+
+            ```Map<RouteMeta, String>```
+        */
+        ParameterizedTypeName inputMapTypeOfFormerRoute = ParameterizedTypeName.get(
+                ClassName.get(Map.class),
+                ClassName.get(RouteMeta.class),
+                ClassName.get(String.class)
+        );
+
+        /*
+            Build input type, format as :
+
+            ```Map<String, RouteMeta>```
+        */
+        ParameterizedTypeName inputMapTypeOfRoute = ParameterizedTypeName.get(
+                ClassName.get(Map.class),
+                ClassName.get(String.class),
+                ClassName.get(RouteMeta.class)
+        );
+
+        ParameterSpec formerRoutesParamSpec = ParameterSpec.builder(
+                inputMapTypeOfFormerRoute, "formerRoutes").build();
+        ParameterSpec routesParamSpec = ParameterSpec.builder(inputMapTypeOfRoute, "routeAtlas").build();
+
+        /*
+            Build method : 'loadInto' formerRoutes
+        */
+        MethodSpec.Builder loadIntoMethodOfFormerRoutsBuilder = MethodSpec.methodBuilder(METHOD_LOAD_INTO)
+                .addAnnotation(Override.class)
+                .addModifiers(PUBLIC)
+                .addParameter(formerRoutesParamSpec);
+
+        /*
+            Build method : 'loadInto' routes
+        */
+        MethodSpec.Builder loadIntoMethodOfRoutsBuilder = MethodSpec.methodBuilder(METHOD_LOAD_INTO)
+                .addAnnotation(Override.class)
+                .addModifiers(PUBLIC)
+                .addParameter(routesParamSpec);
+
+        for (Element element : routeElements) {
+            TypeMirror tm = element.asType();
+            if (!types.isSubtype(tm, type_Activity)) {
+                throw new RuntimeException("ThRouter::Compiler >>> " +
+                        "ActivityRoute has modified a nonActivity class: " + tm.toString() +
+                        "for more information, look at gradle log.");
+            }
+            ActivityRoute activityRoute = element.getAnnotation(ActivityRoute.class);
+//            routeAtlas.put("activity_main", RouteMeta.build("1002", "com.thfund.client.router.demo.MainActivity"));
+            ClassName className = ClassName.get((TypeElement) element);
+            loadIntoMethodOfRoutsBuilder.addStatement("routeAtlas.put($S, $T.build($S, $S))",
+                    activityRoute.routeKey(),
+                    routeMetaCn,
+                    activityRoute.bundleID(),
+                    className);
+
+            // Generate groups
+            String groupFileName = className.simpleName() + SEPARATOR + ActivityRoute.class.getSimpleName();
+            JavaFile.builder(className.packageName(),
+                    TypeSpec.classBuilder(groupFileName)
+                            .addJavadoc(WARNING_TIPS)
+                            .addSuperinterface(ClassName.get(type_IActivityRoute))
+                            .addModifiers(PUBLIC)
+                            .addMethod(loadIntoMethodOfRoutsBuilder.build())
+                            .build()
+            ).build().writeTo(mFiler);
+
+            logger.info(">>> Generated activityRoutes <<<");
+        }
+    }
+
+    private void parseFragmentRoutes(Set<? extends Element> elements) {
     }
 }

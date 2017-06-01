@@ -2,8 +2,6 @@ package com.thfund.client.router.compiler.utils;
 
 import com.thfund.client.router.compiler.Constants;
 
-import org.apache.commons.lang3.StringUtils;
-
 import javax.annotation.processing.Messager;
 import javax.tools.Diagnostic;
 

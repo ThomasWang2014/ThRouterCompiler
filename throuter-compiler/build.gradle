@@ -1,12 +1,18 @@
 apply plugin: 'java'
 
+ext {
+    bintrayName = 'throuter-compiler'
+    artifact = bintrayName
+    libraryName = 'ThRouter compiler'
+    libraryDescription = 'A compiler for ThRouter to find route'
+    libraryVersion = throuter_compiler_version
+}
+
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile project(':throuter-annotation')
     compile 'com.google.auto.service:auto-service:1.0-rc3'
     compile 'com.squareup:javapoet:1.9.0'
-    compile 'org.apache.commons:commons-lang3:3.5'
-    compile 'org.apache.commons:commons-collections4:4.1'
 }
 
 compileJava {

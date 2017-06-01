@@ -1,1 +1,1 @@
-include ':app', ':throuter-compiler', ':throuter-annotation'
+include ':app', ':throuter-compiler', ':throuter-annotation', ':throuter-api'

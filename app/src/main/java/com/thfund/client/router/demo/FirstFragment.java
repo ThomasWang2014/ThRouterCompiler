@@ -7,7 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.thfund.client.router.annotation.Route;
+import com.thfund.client.router.annotation.FragmentRoute;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -15,7 +15,7 @@ import com.thfund.client.router.annotation.Route;
  * create an instance of this fragment.
  */
 
-@Route(routeKey = "fragment_first", routeParent = "activity_main")
+@FragmentRoute(routeKey = "fragment_first", routeParent = "activity_main")
 public class FirstFragment extends Fragment {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
