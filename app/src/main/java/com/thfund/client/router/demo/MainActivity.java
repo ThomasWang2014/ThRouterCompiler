@@ -7,7 +7,7 @@ import com.thfund.client.router.annotation.ActivityRoute;
 
 @ActivityRoute(routeKey = "activity_main", bundleID = "1002",
         formerBundleID = "1001",
-        formerClassName = "com.thfund.client.router.demo.FormerActivity")
+        formerClassName = "com.thfund.client.router.former.FormerActivity")
 public class MainActivity extends AppCompatActivity {
 
     @Override

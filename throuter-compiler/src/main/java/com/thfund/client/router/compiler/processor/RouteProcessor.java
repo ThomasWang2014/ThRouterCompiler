@@ -12,6 +12,7 @@ import com.thfund.client.router.annotation.FragmentRoute;
 import com.thfund.client.router.compiler.Constants;
 import com.thfund.client.router.compiler.utils.CollectionUtils;
 import com.thfund.client.router.compiler.utils.Logger;
+import com.thfund.client.router.compiler.utils.StringUtils;
 import com.thfund.client.router.compiler.utils.TypeUtils;
 import com.thfund.client.router.model.RouteMeta;
 
@@ -34,6 +35,9 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
 import static com.thfund.client.router.compiler.Constants.ACTIVITY;
+import static com.thfund.client.router.compiler.Constants.ANNOTATION_NANE_ACTIVITY_FORMER_ROUTE;
+import static com.thfund.client.router.compiler.Constants.ANNOTATION_NANE_ACTIVITY_ROUTE;
+import static com.thfund.client.router.compiler.Constants.I_ACTIVITY_FORMER_ROUTE;
 import static com.thfund.client.router.compiler.Constants.I_ACTIVITY_ROUTE;
 import static com.thfund.client.router.compiler.Constants.METHOD_LOAD_INTO;
 import static com.thfund.client.router.compiler.Constants.SEPARATOR;
@@ -90,18 +94,8 @@ public class RouteProcessor extends AbstractProcessor {
 
         // Interface of ThRouter
         TypeElement type_IActivityRoute = elements.getTypeElement(I_ACTIVITY_ROUTE);
+        TypeElement type_IActivityFormerRoute = elements.getTypeElement(I_ACTIVITY_FORMER_ROUTE);
         ClassName routeMetaCn = ClassName.get(RouteMeta.class);
-
-        /*
-            Build input type, format as :
-
-            ```Map<RouteMeta, String>```
-        */
-        ParameterizedTypeName inputMapTypeOfFormerRoute = ParameterizedTypeName.get(
-                ClassName.get(Map.class),
-                ClassName.get(RouteMeta.class),
-                ClassName.get(String.class)
-        );
 
         /*
             Build input type, format as :
@@ -114,17 +108,20 @@ public class RouteProcessor extends AbstractProcessor {
                 ClassName.get(RouteMeta.class)
         );
 
-        ParameterSpec formerRoutesParamSpec = ParameterSpec.builder(
-                inputMapTypeOfFormerRoute, "formerRoutes").build();
-        ParameterSpec routesParamSpec = ParameterSpec.builder(inputMapTypeOfRoute, "routeAtlas").build();
-
         /*
-            Build method : 'loadInto' formerRoutes
+            Build input type, format as :
+
+            ```Map<RouteMeta, String>```
         */
-        MethodSpec.Builder loadIntoMethodOfFormerRoutsBuilder = MethodSpec.methodBuilder(METHOD_LOAD_INTO)
-                .addAnnotation(Override.class)
-                .addModifiers(PUBLIC)
-                .addParameter(formerRoutesParamSpec);
+        ParameterizedTypeName inputMapTypeOfFormerRoute = ParameterizedTypeName.get(
+                ClassName.get(Map.class),
+                ClassName.get(RouteMeta.class),
+                ClassName.get(String.class)
+        );
+
+        ParameterSpec routesParamSpec = ParameterSpec.builder(inputMapTypeOfRoute, "routeAtlas").build();
+        ParameterSpec formerRoutesParamSpec = ParameterSpec.builder(
+                inputMapTypeOfFormerRoute, "formerRoutesAtlas").build();
 
         /*
             Build method : 'loadInto' routes
@@ -134,12 +131,19 @@ public class RouteProcessor extends AbstractProcessor {
                 .addModifiers(PUBLIC)
                 .addParameter(routesParamSpec);
 
+        /*
+            Build method : 'loadInto' formerRoutes
+        */
+        MethodSpec.Builder loadIntoMethodOfFormerRoutsBuilder = MethodSpec.methodBuilder(METHOD_LOAD_INTO)
+                .addAnnotation(Override.class)
+                .addModifiers(PUBLIC)
+                .addParameter(formerRoutesParamSpec);
+
         for (Element element : routeElements) {
             TypeMirror tm = element.asType();
             if (!types.isSubtype(tm, type_Activity)) {
                 throw new RuntimeException("ThRouter::Compiler >>> " +
-                        "ActivityRoute has modified a nonActivity class: " + tm.toString() +
-                        "for more information, look at gradle log.");
+                        "ActivityRoute has modified a nonActivity class: " + tm);
             }
             ActivityRoute activityRoute = element.getAnnotation(ActivityRoute.class);
 //            routeAtlas.put("activity_main", RouteMeta.build("1002", "com.thfund.client.router.demo.MainActivity"));
@@ -150,10 +154,10 @@ public class RouteProcessor extends AbstractProcessor {
                     activityRoute.bundleID(),
                     className);
 
-            // Generate groups
-            String groupFileName = className.simpleName() + SEPARATOR + ActivityRoute.class.getSimpleName();
+            // Generate activity route file
+            String activityRouteFile = className.simpleName() + SEPARATOR + ANNOTATION_NANE_ACTIVITY_ROUTE;
             JavaFile.builder(className.packageName(),
-                    TypeSpec.classBuilder(groupFileName)
+                    TypeSpec.classBuilder(activityRouteFile)
                             .addJavadoc(WARNING_TIPS)
                             .addSuperinterface(ClassName.get(type_IActivityRoute))
                             .addModifiers(PUBLIC)
@@ -161,7 +165,38 @@ public class RouteProcessor extends AbstractProcessor {
                             .build()
             ).build().writeTo(mFiler);
 
-            logger.info(">>> Generated activityRoutes <<<");
+            logger.info(">>> Generated activityRoutes: " + className + " <<<");
+
+            boolean noFormerBundleID = StringUtils.isEmpty(activityRoute.formerBundleID());
+            boolean noFormerClassName = StringUtils.isEmpty(activityRoute.formerClassName());
+
+            if (noFormerBundleID && noFormerClassName) {}
+
+
+            if (noFormerBundleID != noFormerClassName) {
+                throw new RuntimeException("ThRouter::Compiler >>> " +
+                        "Must specify both formerBundleID and formerClassName: " + tm);
+            }
+
+            loadIntoMethodOfFormerRoutsBuilder.addStatement("formerRoutesAtlas.put($T.build($S, $S), $S)",
+                    routeMetaCn,
+                    activityRoute.formerBundleID(),
+                    activityRoute.formerClassName(),
+                    activityRoute.routeKey()
+                    );
+
+            // Generate activity route former file
+            String activityFormerRouteFile = className.simpleName() + SEPARATOR + ANNOTATION_NANE_ACTIVITY_FORMER_ROUTE;
+            JavaFile.builder(className.packageName(),
+                    TypeSpec.classBuilder(activityFormerRouteFile)
+                            .addJavadoc(WARNING_TIPS)
+                            .addSuperinterface(ClassName.get(type_IActivityFormerRoute))
+                            .addModifiers(PUBLIC)
+                            .addMethod(loadIntoMethodOfFormerRoutsBuilder.build())
+                            .build()
+            ).build().writeTo(mFiler);
+
+            logger.info(">>> Generated activityFormerRoutes: " + className + " <<<");
         }
     }
 

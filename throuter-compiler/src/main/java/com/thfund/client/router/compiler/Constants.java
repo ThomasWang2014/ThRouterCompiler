@@ -28,11 +28,14 @@ public class Constants {
     private static final String FACADE_PACKAGE = "com.thfund.client.throuter.api.facade";
     private static final String TEMPLATE_PACKAGE = ".template";
     public static final String I_ACTIVITY_ROUTE = FACADE_PACKAGE + TEMPLATE_PACKAGE + ".IActivityRoute";
+    public static final String I_ACTIVITY_FORMER_ROUTE = FACADE_PACKAGE + TEMPLATE_PACKAGE + ".IActivityFormerRoute";
 
     // Log
     public static final String PREFIX_OF_LOGGER = PROJECT + "::Compiler ";
 
     // Annotation type
+    public static final String ANNOTATION_NANE_ACTIVITY_ROUTE= "ActivityRoute";
+    public static final String ANNOTATION_NANE_ACTIVITY_FORMER_ROUTE= "ActivityFormerRoute";
     public static final String ANNOTATION_TYPE_ACTIVITY_ROUTE= "com.thfund.client.router.annotation.ActivityRoute";
     public static final String ANNOTATION_TYPE_FRAGMENT_ROUTE= "com.thfund.client.router.annotation.FragmentRoute";
 
